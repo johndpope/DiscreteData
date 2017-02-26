@@ -9,7 +9,58 @@ fileprivate typealias iovec_ = Foundation.iovec
 
 
 /// Descrete Data
-struct DiscreteData {
+public struct DiscreteData {
+    
+    private var container: _FragmentContainer
+    
+    private init(container: _FragmentContainer) {
+        self.container = container
+    }
+    
+    public init(capacity: Int) {
+        container = _FragmentContainer(capacity: capacity)
+    }
+    
+    public init(bytes: UnsafeMutableRawPointer, length: Int, free: @escaping (UnsafeMutableRawPointer, Int) -> ()) {
+        container = _FragmentContainer(bytes: bytes, length: length, free: free)
+    }
+    
+    public init(buffer: UnsafeRawBufferPointer, length: Int) {
+        container = _FragmentContainer(buffer: buffer, length: length)
+    }
+    
+    public init<T>(buffer: UnsafePointer<T>, length: Int) {
+        container = _FragmentContainer(buffer: buffer, length: length)
+    }
+    
+    public init(copy: DiscreteData, offset: Int, length: Int) {
+        container = _FragmentContainer(copy: copy.container, offset: offset, length: length)
+    }
+    
+    public func subdata(from offset: Int, to end: Int) -> DiscreteData {
+        return self.subdata(from: offset, len: end - offset + 1)
+    }
+    
+    public func subdata(from offset: Int, len: Int) -> DiscreteData {
+        return DiscreteData(container: self.container.subdata(from: offset, len: len))
+    }
+    
+    //    func modify(from offset: Int, with buffer: UnsafeMutableRawPointer, len: Int) {
+    //
+    //    }
+    //
+    //    func replace(offset: Int, len: Int, with other: _FragmentContainer) {
+    //
+    //    }
+    //
+    
+    public func getBytes(from offset: Int, length: Int, to dest: UnsafeMutableRawPointer) {
+        self.container.getBytes(from: offset, length: length, to: dest)
+    }
+    
+    public func append(data: DiscreteData) {
+        self.container.append(data: data.container)
+    }
     
     class _FragmentContainer {
         
