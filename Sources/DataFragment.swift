@@ -119,8 +119,12 @@ extension DataFragment {
     convenience init(buffer: PointerType, length: Int) {
         // allcoate internal buffer
         let buf = malloc(length)
+        
+        guard let _buf = buf else {
+            fatalError("malloc: cannot allocate")
+        }
         // copy bytes
-        memcpy(buf, buffer.rawPointer, length)
+        memcpy(_buf, buffer.rawPointer, length)
         // and initialize with free (since allocate with malloc)
         self.init(base: buf!, length: length, free: {free($0.0)})
     }
@@ -227,8 +231,8 @@ extension DataFragment {
         let higherBase  = selfIsLower ?    b.iovec.iov_base : self.iovec.iov_base
         let higherLen   = selfIsLower ?    b.iovec.iov_len  : self.iovec.iov_len
         
-        memcpy(newBuf.base, lowerBase, lowerLen)
-        memcpy(newBuf.base + lowerLen, higherBase, higherLen)
+        memcpy(newBuf.base, lowerBase!, lowerLen)
+        memcpy(newBuf.base + lowerLen, higherBase!, higherLen)
         
         self.release()
         b.release()
