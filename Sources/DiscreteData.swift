@@ -32,10 +32,49 @@ extension DiscreteData {
 // MARK: DiscreteData Implementation
 extension DiscreteData {
 
-    public func vwrite(to fd: Int32, flags: Int32 = 0) {
-        let iovecs = self.container.fragments.map({$0.iovec})
-        writev(fd, iovecs, flags)
+    private enum CError: Error {
+        case str(String)
+        init(_ str: String) {
+            self = .str(str)
+        }
     }
+    
+    public func vwrite(to fd: Int32) throws {
+        let iovecs = self.container.fragments.map({$0.iovec})
+        if writev(fd, iovecs, Int32(iovecs.count)) == -1 {
+            throw(CError(String.lastErrnoString))
+        }
+    }
+    
+    public func write(to url: URL, options: Data.WritingOptions = []) throws {
+        
+        if !url.isFileURL {
+            // throw error
+        }
+        
+        if options.contains(.atomic) {
+            if options.contains(.withoutOverwriting) {
+                // thrownerror
+            }
+            
+            // should change pid to something different, for security reasons
+            let tempPath = "/tmp/\(getpid())-\(UUID())"
+            
+            do {
+                try write(to: URL(fileURLWithPath: tempPath))
+                rename(tempPath, url.path)
+            } catch {
+                print(error)
+            }
+        }
+        
+        let fd = open(url.path, O_CREAT | O_WRONLY, S_IRUSR | S_IWUSR)
+        if fd == -1 {
+            throw CError(String.lastErrnoString)
+        }
+        try vwrite(to: fd)
+    }
+
 
     public func subdata(from offset: Int, to end: Int) -> DiscreteData {
         return self.subdata(from: offset, len: end - offset + 1)
