@@ -237,4 +237,41 @@ extension DataFragment {
         self.parent = nil // dereference
     }
 }
+
+// MARK: Fragment Relations
+extension DataFragment {
+    func overlapped(with other: DataFragment) -> Bool {
+        return
+            min(self.iovec.iov_base, other.iovec.iov_base) == self.iovec.iov_base ?
+                (self.iovec.iov_base + self.iovec.iov_len) > other.iovec.iov_base :
+                (self.iovec.iov_base + self.iovec.iov_len) < other.iovec.iov_base
+    }
+    
+    func isLower(than other: DataFragment) -> Bool {
+        return self.v_base < other.v_base
+    }
+    
+    /// If the other fragment has the same parent (means the memory segment these fragment are allocated from the same malloc()/mmap() call
+    func isRelative(with other: DataFragment) -> Bool {
+        return self.v_base == other.v_base
+    }
+    
+    /// this fragment is not an reference to another fragment
+    func isIndependent() -> Bool {
+        return self.parent == nil
+    }
+    
+    func contiguous(with other: DataFragment) -> Bool {
+        if overlapped(with: other) {
+            return false
+        }
+        
+        if min(self.iovec.iov_base, other.iovec.iov_base) == self.iovec.iov_base {
+            return (self.iovec.iov_base + self.iovec.iov_len) == other.iovec.iov_base
+        } else {
+            return self.iovec.iov_base == (other.iovec.iov_base + other.iovec.iov_len)
+        }
+    }
+}
+
         
