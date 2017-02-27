@@ -66,3 +66,6 @@ fastlane/test_output
 
 # Swift Package Manager
 Packages/
+
+# Ignore .DS_Store
+.DS_Store
