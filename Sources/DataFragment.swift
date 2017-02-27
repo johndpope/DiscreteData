@@ -1,6 +1,13 @@
 
-import CKit
-import Foundation
+import protocol CKit.PointerType
+
+#if os(OSX) || os(iOS) || os(tvOS) || os(watchOS)
+import Darwin
+typealias iovec_ = Darwin.iovec
+#else
+import Glibc
+typealias iovec_ = Glibc.iovec
+#endif
 
 class DataFragment {
     
@@ -89,13 +96,12 @@ class DataFragment {
     ///   - base: the location of the buffer
     ///   - length: the size of the buffer
     ///   - free: the function to deallocate
-    init(base: UnsafeMutableRawPointer, length: Int, free:  @escaping (UnsafeMutableRawPointer, Int) -> ()) {
-        self.base = base
+    init(base: PointerType, length: Int, free:  @escaping (UnsafeMutableRawPointer, Int) -> ()) {
+        self.base = UnsafeMutableRawPointer(mutating: base.rawPointer)
         self.o_len = length
         self.o_off = 0
         self.free_ = free
     }
-    
     deinit {
         free_(iovec.iov_base, iovec.iov_len)
     }
@@ -110,23 +116,12 @@ extension DataFragment {
     /// - Parameters:
     ///   - buffer: The buffer copy from
     ///   - length: how many bytes to copy
-    convenience init(buffer: UnsafeRawPointer, length: Int) {
+    convenience init(buffer: PointerType, length: Int) {
         // allcoate internal buffer
         let buf = malloc(length)
         // copy bytes
-        memcpy(buf, buffer, length)
+        memcpy(buf, buffer.rawPointer, length)
         // and initialize with free (since allocate with malloc)
-        self.init(base: buf!, length: length, free: {free($0.0)})
-    }
-    
-    /// Init and copy from payload in another buffer
-    ///
-    /// - Parameters:
-    ///   - buffer: The buffer copy from
-    ///   - length: how many bytes to copy
-    convenience init<T>(buffer: UnsafePointer<T>, length: Int) {
-        let buf = malloc(length)
-        memcpy(buf, buffer, length)
         self.init(base: buf!, length: length, free: {free($0.0)})
     }
 }
