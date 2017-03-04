@@ -67,5 +67,8 @@ fastlane/test_output
 # Swift Package Manager
 Packages/
 
+# Ignore xcode generated project
+DiscreteData.xcodeproj
+
 # Ignore .DS_Store
 .DS_Store
