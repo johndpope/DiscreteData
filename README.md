@@ -6,7 +6,7 @@
 Replacement of Swift Foundation.Data, optimized for chunked data and data require amount of modifications.
 
 # Features 
-- No copy even on write
+- Zero copy
 - Reducing physical memory required for payloads contains repeated contents.
 - Support vector read/write on file descriptors and socket
 - Writtern in pure Swift
