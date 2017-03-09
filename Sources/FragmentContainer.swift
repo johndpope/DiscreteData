@@ -87,12 +87,12 @@ extension DiscreteData {
             }
 
             if front != 0 {
-                frontFragment = fragments.removeFirst()
+                frontFragment = fragments.removeFirst().copy()
                 frontFragment = frontFragment!.split(at: front)
             }
 
             if fragments.count > 1 && back != 0  {
-                backFragment = fragments.removeLast()
+                backFragment = fragments.removeLast().copy()
                 _ = backFragment!.split(at: backFragment!.iovec.iov_len - back)
             }
 

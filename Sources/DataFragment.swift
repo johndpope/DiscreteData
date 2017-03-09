@@ -53,6 +53,13 @@ class DataFragment {
 
     // point to the segment that's created by malloc
     var parent: DataFragment?
+    
+    // the address of this segment offset to root location,
+    // so the actual pointer this segment stores will be base + o_off
+    var o_off: Int
+    
+    // how big is this buffert
+    var o_len: Int
 
     var v_base: UnsafeMutableRawPointer {
         if let parent = self.parent {
@@ -60,13 +67,6 @@ class DataFragment {
         }
         return base
     }
-
-    // the address of this segment offset to root location,
-    // so the actual pointer this segment stores will be base + o_off
-    var o_off: Int
-
-    // how big is this buffert
-    var o_len: Int
 
     /// Init empty buffer with capacity
     ///
@@ -128,6 +128,15 @@ class DataFragment {
         self.o_off = 0
         self.free_ = free
     }
+    
+    init(other: DataFragment) {
+        self.base = other.base
+        self.o_len = other.o_off
+        self.o_off = other.o_len
+        self.free_ = other.free_
+        self.parent = other.parent
+    }
+
     deinit {
         free_(iovec.iov_base, iovec.iov_len)
     }
@@ -157,6 +166,13 @@ extension DataFragment {
 
     convenience init<T>(buffer: UnsafePointer<T>, length: Int) {
         self.init(buffer: buffer, length: length)
+    }
+    
+    func copy() -> DataFragment {
+        if self.parent == nil {
+            return DataFragment(parent: self, off: self.o_off, len: self.o_len)
+        }
+        return DataFragment(other: self)
     }
 }
 
